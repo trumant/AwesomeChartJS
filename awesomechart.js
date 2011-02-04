@@ -72,6 +72,9 @@ function AwesomeChart(canvasElementId){
     this.colors = new Array();
     this.title = null;
     
+    // for stacked col charts
+    this.axisLabels = new Array();
+    
     this.backgroundFillStyle = 'rgba(255,255,255,0)';
     this.borderStrokeStyle = 'rgba(255,255,255,0)';
     this.borderWidth = 1.0;
@@ -188,6 +191,8 @@ function AwesomeChart(canvasElementId){
             this.drawVerticalBarChart();
         }else if(this.chartType == "pareto"){
             this.drawParetoChart();
+        }else if (this.chartType == "stacked column"){
+            this.drawStackedColumnChart();
         }else{
             this.drawBarChart();
         }
@@ -1045,5 +1050,129 @@ function AwesomeChart(canvasElementId){
         
     }
     
+    this.drawStackedColumnChart = function(){
+        var context = this.ctx;
+        
+        var numCols = this.data.length;
+        
+        //Calculate col size:
+        var totals = new Array();
+        var maxData = 0;
+        var minData = 0;
+        
+        for(var i=0; i<this.data.length; i++){
+            var total = 0;
+            var theData = this.data[i];
+            for(var j=0; j<theData.length; j++){
+                total += theData[j];
+            }
+            totals.push(total);
+            if(maxData == 0 || total > maxData){
+                maxData = total;
+            }
+            if(minData == 0 || total < minData){
+                minData = total;
+            }
+        }
+        var colWidth = (this.width - this.marginLeft
+            - this.marginRight - (numCols-1) * this.barHGap) / numCols;
+                            
+        var colMaxTopY = this.marginTop + this.labelMargin + this.labelFontHeight + this.dataValueMargin + this.dataValueFontHeight;
+        
+        var colMinTopY = this.height - this.marginBottom;
+        
+        if(this.title!=null){
+            colMaxTopY += this.titleFontHeight + this.titleMargin;
+        }
+        
+        var colBottomY = this.height - this.marginBottom;
+        
+        if(minData<0){
+        
+            colMinTopY = this.height - this.marginBottom - this.labelMargin - this.labelFontHeight - this.dataValueMargin - this.dataValueFontHeight;
+            
+            colBottomY =  colMinTopY + ((this.height - this.marginBottom -  colMaxTopY - this.labelMargin - this.labelFontHeight - this.dataValueMargin - this.dataValueFontHeight) * minData) / (Math.abs(minData)+maxData);
+            
+        }
+        
+        var maxColHeight = Math.max(Math.abs(colBottomY - colMaxTopY), Math.abs(colBottomY - colMinTopY));
+        var maxColAbsData = Math.max(Math.abs(minData), Math.abs(maxData));
+        
+        var x = this.marginLeft;
+        var y = colBottomY;
+        var barHeight = 0;
+                
+        //var di = 0;
+        for(var i=0; i<this.data.length; i++){
+            var colData = this.data[i];
+            for(var k=0; k<colData.length; k++){
+                var segHeight = colData[k];
+                
+                var totalColHeight = maxColHeight;
+                var thisSegHeight = totalColHeight * (segHeight / totals[i]);
+
+                //Draw the column segments:
+                if(this.colors[k]){
+                    context.fillStyle = this.colors[k];
+                }
+                context.strokeStyle = this.barStrokeStyle;
+                context.lineWidth = this.barBorderWidth;
+
+                context.beginPath();
+                context.moveTo(x, y);
+                context.lineTo(x, y - thisSegHeight);
+                context.lineTo(x + colWidth, y - thisSegHeight);
+                context.lineTo(x + colWidth, y);
+                y = y - thisSegHeight;
+
+                context.save();
+
+                context.shadowOffsetX = this.barShadowOffsetX;
+                context.shadowOffsetY = this.barShadowOffsetY;
+                context.shadowBlur = this.barShadowBlur;
+                context.shadowColor = this.barShadowColor;
+
+                context.fill();
+                context.restore();
+                context.stroke();
+            }
+            
+            //Draw the label:
+            /*
+            context.font = this.labelFontStyle + ' ' + this.labelFontHeight + 'px '+ this.labelFont;
+            if(this.colors[i]){
+                context.fillStyle = this.colors[i];
+            }else{
+                context.fillStyle = this.labelFillStyle;
+            }
+            context.textAlign = 'center';
+            if(this.labels[i]){
+                if(di>=0){
+                    context.textBaseline = 'bottom';
+                    context.fillText(this.labels[i], x + barWidth/2, barBottomY - barHeight - this.labelMargin, barWidth);
+                }else{
+                    context.textBaseline = 'top';
+                    context.fillText(this.labels[i], x + barWidth/2, barBottomY - barHeight + this.labelMargin, barWidth);
+                }
+            }
+            
+            //Draw the data value:
+            
+            context.font = this.dataValueFontStyle + ' ' + this.dataValueFontHeight + 'px '+ this.dataValueFont;
+            context.fillStyle = this.dataValueFillStyle;
+            context.textAlign = 'center';
+            if(di>=0){
+                context.textBaseline = 'bottom';
+                context.fillText(di, x + barWidth/2, barBottomY - barHeight - this.labelMargin - this.dataValueMargin, barWidth);
+            }else{
+                context.textBaseline = 'top';
+                context.fillText(di, x + barWidth/2, barBottomY - barHeight + this.labelMargin + this.dataValueMargin, barWidth);
+            }
+            */
+            
+            x = x + colWidth + this.barHGap;
+            y = colBottomY;
+        }
+    }
 }
 

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>AwesomeChartJS demo</title>
+        <style>
+        
+            body{
+                background: #fff;
+                color: #333;
+            }
+            
+            a, a:visited, a:link, a:active{
+                color: #333;
+            }
+            
+            a:hover{
+                color: #00f;
+            }
+        
+            .charts_container{
+                width: 900px;
+                height: 420px;
+                margin: 10px auto;
+            }
+            
+            .chart_container_centered{
+                text-align: center;
+                width: 900px;
+                height: 420px;
+                margin: 10px auto;
+            }
+            
+            .chart_container{
+                width: 400px;
+                height: 400px;
+                margin: 0px 25px;
+                float: left;
+            }
+            
+            .footer{
+                font-size: small;
+                text-align: right;
+            }
+        </style>
+        <script type="application/javascript" src="awesomechart.js"> </script>
+    </head>
+    <body>
+        <div class="charts_container">
+            <div class="chart_container">
+                <canvas id="chartCanvas1" width="400" height="400">
+                    Your web-browser does not support the HTML 5 canvas element.
+                </canvas>
+            </div>
+            
+        </div>
+        <div class="charts_container">
+            <div class="chart_container">
+                <canvas id="chartCanvas2" width="400" height="400">
+                    Your web-browser does not support the HTML 5 canvas element.
+                </canvas>
+            </div>
+        </div>
+        
+        <p class="footer">Data source: <a href="http://gs.statcounter.com/#browser-ww-monthly-200912-201012-bar" target="_blank">StatCounter</a></p>
+        
+        <script type="application/javascript">
+        
+            var chart1 = new AwesomeChart('chartCanvas1');
+            chart1.title = "Expenses";
+            chart1.data = [
+                [27.45, 15.13, 8.94], 
+                [15.13, 8.94, 27.45], 
+                [8.94, 27.45, 15.13] 
+            ];
+            chart1.chartType = 'stacked column';
+            chart1.labels = ['Food','Travel','Lodging'];
+            chart1.axisLabels ['October', 'November', 'December'];
+            chart1.colors = ['#006CFF', '#FF6600', '#34A038'];
+            chart1.labelFillStyle = '#006CFF';
+            chart1.borderStrokeStyle = 'rgb(0,0,0)';
+            chart1.borderWidth = '4'
+            chart1.draw();
+            
+            var chart2 = new AwesomeChart('chartCanvas2');
+            chart2.chartType = "horizontal bars";
+            chart2.title = "Worldwide IE market share: December 2010";
+            chart2.data = [27.45,15.13,8.94];
+            chart2.labels = ['IE 8','IE 7','IE 6'];
+            chart2.barFillStyle = '#006CFF'
+            chart2.labelFillStyle = '#006CFF'
+            chart2.borderStrokeStyle = 'rgb(0,0,0)';
+            chart2.borderWidth = '4'
+            chart2.draw();
+            
+        </script>
+        
+    </body>
+</html>
+
