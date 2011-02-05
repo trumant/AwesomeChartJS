@@ -51,7 +51,6 @@
                     Your web-browser does not support the HTML 5 canvas element.
                 </canvas>
             </div>
-            
         </div>
         <div class="charts_container">
             <div class="chart_container">
@@ -61,16 +60,14 @@
             </div>
         </div>
         
-        <p class="footer">Data source: <a href="http://gs.statcounter.com/#browser-ww-monthly-200912-201012-bar" target="_blank">StatCounter</a></p>
-        
         <script type="application/javascript">
         
             var chart1 = new AwesomeChart('chartCanvas1');
             chart1.title = "Expenses";
             chart1.data = [
                 [27.45, 15.13, 8.94], 
-                [15.13, 8.94, 27.45], 
-                [8.94, 27.45, 15.13] 
+                [15.13 * 2, 8.94 * 1.5, 27.45 * 1.8], 
+                [8.94 * 1.8, 27.45 * 2, 15.13 * 2.3] 
             ];
             chart1.chartType = 'stacked column';
             chart1.labels = ['Food','Travel','Lodging'];
@@ -78,7 +75,7 @@
             chart1.colors = ['#006CFF', '#FF6600', '#34A038'];
             chart1.labelFillStyle = '#006CFF';
             chart1.borderStrokeStyle = 'rgb(0,0,0)';
-            chart1.borderWidth = '4'
+            chart1.borderWidth = '2';
             chart1.draw();
             
             var chart2 = new AwesomeChart('chartCanvas2');
@@ -89,9 +86,8 @@
             chart2.barFillStyle = '#006CFF'
             chart2.labelFillStyle = '#006CFF'
             chart2.borderStrokeStyle = 'rgb(0,0,0)';
-            chart2.borderWidth = '4'
+            chart2.borderWidth = '2';
             chart2.draw();
-            
         </script>
         
     </body>
