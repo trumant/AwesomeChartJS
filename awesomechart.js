@@ -22,12 +22,12 @@ Array.prototype.numericSortReverse = function(data){
 
 function AwesomeChart(canvasElementId){
     var canvas = document.getElementById(canvasElementId);
-	var that = this;
-	
+    var that = this;
+    
     this.ctx = canvas.getContext('2d');
     this.width = this.ctx.canvas.width;
     this.height = this.ctx.canvas.height;
-	
+    
     this.numberOfDecimals = 0;
     
     this.proportionalSizes = true;
@@ -133,8 +133,8 @@ function AwesomeChart(canvasElementId){
         }
         return 'rgb('+rgb.join(",")+')';
     }
-
-
+    
+    
     this.draw = function(){
         var context = this.ctx;
         this.chartData = new ChartData(this.data);
@@ -178,6 +178,8 @@ function AwesomeChart(canvasElementId){
             this.drawParetoChart();
         }else if (this.chartType == "stacked column"){
             this.drawStackedColumnChart();
+        }else if (this.chartType == "line") {
+            this.drawLineChart();
         }else{
             this.drawBarChart();
         }
@@ -946,6 +948,170 @@ function AwesomeChart(canvasElementId){
         }
     }
     
+
+    this.drawLineChart = function(){
+
+        var context = this.ctx;
+        var numCols = this.data.length;
+        
+        var maxData = this.chartData.max;
+        var minData = this.chartData.min;
+
+        var yAxisValues = new Array();
+        var yValueStep = ((maxData - minData) / 7);
+	      var digits = Math.floor(Math.log(yValueStep)/Math.LN10) * (-1);
+
+        // Number#toFixed only accept the Integer between 0 and 20
+	      if(digits < 0) {
+	          digits = 0;
+        } else if (digits > 20) {
+            digits = 20;
+        }
+
+        context.save();
+        
+        yValueStep = yValueStep.toFixed(digits);
+        for (var i = 0; i <= 10; i++){
+            yAxisValues.push((Math.floor(minData / yValueStep) * yValueStep + (i-1) * yValueStep).toFixed(digits));
+        }
+
+        // Find the widest Y-axis value's width:
+        context.font = this.labelCtxStyle;
+        var maxYAxisLabelWidth = 0;
+        var yAxisLabelWidth = 0;
+        for(var i=0; i<yAxisValues.length; i++){
+            yAxisLabelWidth = context.measureText(yAxisValues[i]).width;
+            if(yAxisLabelWidth>maxYAxisLabelWidth){
+                maxYAxisLabelWidth = yAxisLabelWidth;
+            }
+        }
+        
+        // Calculate the chart size and position:
+        var chartWidth = this.width - this.marginLeft - this.marginRight - 2*this.chartMarkerSize - maxYAxisLabelWidth - 2*this.yAxisLabelMargin;
+        var chartHeight = this.height - this.marginTop - this.marginBottom;
+        
+        var chartTopLeftX = this.marginLeft + this.chartMarkerSize + maxYAxisLabelWidth + this.yAxisLabelMargin;
+        var chartTopLeftY = this.marginTop;
+        
+
+        if(this.title){
+            chartHeight -= this.titleFontHeight + this.titleMargin;
+            chartTopLeftY += this.titleFontHeight + this.titleMargin;
+        }
+
+        //change base point
+        context.translate(chartTopLeftX, chartTopLeftY);
+        
+        // Draw the chart's background:
+        context.fillStyle = this.chartBackgroundFillStyle;
+        context.fillRect(0,0,chartWidth,chartHeight);
+        
+        // Draw the markers, horizontal lines and axis's label
+        var yStep = chartHeight / 10;
+        var lineY = 0;
+        context.lineWidth = this.chartHorizontalLineWidth;
+        context.font = this.labelFontStyle + ' ' + this.labelFontHeight + 'px ' + this.labelFont;
+        
+        for(var i=0; i<=10; i++){
+            lineY = i*yStep;
+            
+            
+            context.beginPath();
+            context.moveTo(0,lineY);
+            context.lineTo(chartWidth,lineY);
+            context.stroke();
+            
+            context.strokeStyle = this.chartBorderStrokeStyle;
+            context.beginPath();
+            context.moveTo(-this.chartMarkerSize,lineY);
+            context.lineTo(0,lineY);
+            context.stroke();
+            
+            context.beginPath();
+            context.fillStyle = this.yAxisLabelFillStyle;
+            context.textAlign = 'right';
+            context.textBaseline = 'middle';
+            context.fillText(yAxisValues[10-i], -this.chartMarkerSize-this.yAxisLabelMargin, lineY);
+        }
+
+        //
+        // Draw data
+        //
+        var xStep = parseInt(chartWidth / (this.data.length));
+        var yPerUnitValue = yStep / yValueStep;
+        var x1 = 0;
+        var y1 = 0;
+        var x2 = parseInt(-xStep/2);
+        var y2 = 0;
+        
+        for(var i=0; i<this.data.length; i++){
+            x1 = x2;
+            y1 = y2;
+            x2 += xStep;
+            y2 = parseInt((yAxisValues[10] - this.data[i]) * yPerUnitValue);
+            if (i > 0) {
+                context.save();
+                context.shadowOffsetX = this.barShadowOffsetX;
+                context.shadowOffsetY = this.barShadowOffsetY;
+                context.shadowBlur = this.barShadowBlur;
+                context.shadowColor = this.barShadowColor;
+
+                context.strokeStyle = this.chartLineStrokeStyle;
+                context.lineWidth = this.chartLineWidth;
+                context.beginPath();
+                context.moveTo(x1, y1);
+                context.lineTo(x2, y2);
+                context.stroke();
+                
+                context.restore();
+            }
+            // Draw the points;
+            context.fillStyle = this.chartPointFillStyle;
+            context.beginPath();
+            context.arc(x2, y2, this.chartPointRadius, 0, 2*Math.PI, false);
+            context.fill();
+            context.stroke();
+            
+            // Draw the data label:
+            context.font = this.labelFontStyle + ' ' + this.labelFontHeight + 'px '+ this.labelFont;
+            if(this.colors[i]){
+                context.fillStyle = this.colors[i];
+            }else{
+                context.fillStyle = this.labelFillStyle;
+            }
+            context.textAlign = 'center';
+            if(this.labels[i]){
+                if(this.data[i]>=0){
+                    context.textBaseline = 'bottom';
+                    context.fillText(this.labels[i], x2, y2 - this.labelMargin, xStep);
+                }else{
+                    context.textBaseline = 'top';
+                    context.fillText(this.labels[i], x2, y2 + this.labelMargin, xStep);
+                }
+            }
+            
+            // Draw the data value:
+            context.font = this.dataFontStyle + ' ' + this.dataFontHeight + 'px ' + this.dataFont;
+            context.fillStyle = this.dataValueFillStyle;
+            context.textAlign = 'center';
+            if(this.data[i]>=0){
+                context.textBaseline = 'bottom';
+                context.fillText(this.data[i], x2, y2 - this.labelMargin - this.dataValueMargin, xStep);
+            }else{
+                context.textBaseline = 'top';
+                context.fillText(this.data[i], x2, y2 + this.labelMargin + this.dataValueMargin, xStep);
+            }
+            
+        }
+        
+        // Draw the chart's border:
+        context.lineWidth = this.chartBorderLineWidth;
+        context.strokeStyle = this.chartBorderStrokeStyle;
+        context.strokeRect(0,0,chartWidth,chartHeight);
+
+        context.restore();
+    }
+    
     function maxTextWidth(text, fontStyle) {
         that.ctx.font = fontStyle;
         var maxWidth = 0;
@@ -1049,34 +1215,34 @@ function AwesomeChart(canvasElementId){
 }
 
 function ChartData(data) {
-	this.totals = new Array();
-	this.max = 0;
-	this.min = 0;
-	this.sum = 0;
-	 
- 	for (var i = 0; i < data.length; i++) {
-		var total = 0;
-		if (typeof(data[0]) == 'object') {
-			var theData = data[i];
-			for (var j = 0; j < theData.length; j++) {
-				total += theData[j];
-			}
-			this.totals.push(total);
-			if (this.max == 0 || total > this.max) {
-				this.max = total;
-			}
-			if (this.min == 0 || total < this.min) {
-				this.min = total;
-			}
-		} else {
-			this.sum += data[i];
-		}
-		if (this.max == 0 || this.max < data[i]) {
-			this.max = data[i];
-		}
-		if (this.min == 0 || this.min < data[i]) {
-			this.min = data[i];
-		}
+    this.totals = new Array();
+    this.max = 0;
+    this.min = 0;
+    this.sum = 0;
+    
+    for (var i = 0; i < data.length; i++) {
+        var total = 0;
+        if (typeof(data[0]) == 'object') {
+            var theData = data[i];
+	          for (var j = 0; j < theData.length; j++) {
+		            total += theData[j];
+	          }
+	          this.totals.push(total);
+	          if (this.max == 0 || total > this.max) {
+	              this.max = total;
+		        }
+            if (this.min == 0 || total < this.min) {
+		            this.min = total;
+		        }
+        } else {
+	          this.sum += data[i];
+	      }
+        if (this.max < data[i]) {
+	          this.max = data[i];
+        }
+	      if (this.min > data[i]) {
+            this.min = data[i];
+        }
     }		
 }
 
