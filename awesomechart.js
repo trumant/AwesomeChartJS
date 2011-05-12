@@ -732,7 +732,7 @@ function AwesomeChart(canvasElementId){
         }
         // new call
         context.save();
-        drawBackground(dataSum, chartTopLeftX, chartTopLeftY, chartWidth, chartHeight);
+        drawBackground(0, dataSum, chartTopLeftX, chartTopLeftY, chartWidth, chartHeight);
         
         // Draw the bars:
         
@@ -956,84 +956,34 @@ function AwesomeChart(canvasElementId){
         
         var maxData = this.chartData.max;
         var minData = this.chartData.min;
-
+        
         var yAxisValues = new Array();
-        var yValueStep = ((maxData - minData) / 7);
-	      var digits = Math.floor(Math.log(yValueStep)/Math.LN10) * (-1);
-
-        // Number#toFixed only accept the Integer between 0 and 20
-	      if(digits < 0) {
-	          digits = 0;
-        } else if (digits > 20) {
-            digits = 20;
-        }
-
+        var yValueStep = ((maxData - minData) / 8);
+        
         context.save();
         
-        yValueStep = yValueStep.toFixed(digits);
-        for (var i = 0; i <= 10; i++){
-            yAxisValues.push((Math.floor(minData / yValueStep) * yValueStep + (i-1) * yValueStep).toFixed(digits));
-        }
+        var yAxisMin = minData - yValueStep;
+        var yAxisMax = minData + 9 * yValueStep;
 
         // Find the widest Y-axis value's width:
         context.font = this.labelCtxStyle;
-        var maxYAxisLabelWidth = 0;
-        var yAxisLabelWidth = 0;
-        for(var i=0; i<yAxisValues.length; i++){
-            yAxisLabelWidth = context.measureText(yAxisValues[i]).width;
-            if(yAxisLabelWidth>maxYAxisLabelWidth){
-                maxYAxisLabelWidth = yAxisLabelWidth;
-            }
-        }
+        var yAxisLabelWidth = Math.max(context.measureText(roundDigit((yAxisMax - yAxisMin)/10, yAxisMin)).width, context.measureText(roundDigit((yAxisMax - yAxisMin)/10, yAxisMax)).width);
         
         // Calculate the chart size and position:
-        var chartWidth = this.width - this.marginLeft - this.marginRight - 2*this.chartMarkerSize - maxYAxisLabelWidth - 2*this.yAxisLabelMargin;
+        var chartWidth = this.width - this.marginLeft - this.marginRight - this.chartMarkerSize - yAxisLabelWidth - this.yAxisLabelMargin;
         var chartHeight = this.height - this.marginTop - this.marginBottom;
         
-        var chartTopLeftX = this.marginLeft + this.chartMarkerSize + maxYAxisLabelWidth + this.yAxisLabelMargin;
+        var chartTopLeftX = this.marginLeft + this.chartMarkerSize + yAxisLabelWidth + this.yAxisLabelMargin;
         var chartTopLeftY = this.marginTop;
         
-
         if(this.title){
             chartHeight -= this.titleFontHeight + this.titleMargin;
             chartTopLeftY += this.titleFontHeight + this.titleMargin;
         }
 
-        //change base point
-        context.translate(chartTopLeftX, chartTopLeftY);
-        
-        // Draw the chart's background:
-        context.fillStyle = this.chartBackgroundFillStyle;
-        context.fillRect(0,0,chartWidth,chartHeight);
-        
-        // Draw the markers, horizontal lines and axis's label
         var yStep = chartHeight / 10;
-        var lineY = 0;
-        context.lineWidth = this.chartHorizontalLineWidth;
-        context.font = this.labelFontStyle + ' ' + this.labelFontHeight + 'px ' + this.labelFont;
+        drawBackground(yAxisMin, yAxisMax, chartTopLeftX, chartTopLeftY, chartWidth, chartHeight);
         
-        for(var i=0; i<=10; i++){
-            lineY = i*yStep;
-            
-            
-            context.beginPath();
-            context.moveTo(0,lineY);
-            context.lineTo(chartWidth,lineY);
-            context.stroke();
-            
-            context.strokeStyle = this.chartBorderStrokeStyle;
-            context.beginPath();
-            context.moveTo(-this.chartMarkerSize,lineY);
-            context.lineTo(0,lineY);
-            context.stroke();
-            
-            context.beginPath();
-            context.fillStyle = this.yAxisLabelFillStyle;
-            context.textAlign = 'right';
-            context.textBaseline = 'middle';
-            context.fillText(yAxisValues[10-i], -this.chartMarkerSize-this.yAxisLabelMargin, lineY);
-        }
-
         //
         // Draw data
         //
@@ -1048,7 +998,7 @@ function AwesomeChart(canvasElementId){
             x1 = x2;
             y1 = y2;
             x2 += xStep;
-            y2 = parseInt((yAxisValues[10] - this.data[i]) * yPerUnitValue);
+            y2 = parseInt((yAxisMax - this.data[i]) * yPerUnitValue);
             if (i > 0) {
                 context.save();
                 context.shadowOffsetX = this.barShadowOffsetX;
@@ -1147,27 +1097,31 @@ function AwesomeChart(canvasElementId){
         that.ctx.stroke();
     }
     
-    function drawBackground(maxDataVal, chartTopLeftX, chartTopLeftY, chartWidth, chartHeight) {
+    function roundDigit(base, target) {
+	      var digit = Math.round(Math.log(base) / Math.LN10);
+        var rounded = Math.round(target / Math.pow(10, digit - 1)) * Math.pow(10, digit - 1);
+        if (digit < 1) {
+            rounded = rounded.toFixed( -1*(digit - 1));
+        }
+        return rounded;
+    }
+    
+    function drawBackground(minDataVal, maxDataVal, chartTopLeftX, chartTopLeftY, chartWidth, chartHeight) {
         var context = that.ctx;
+        minDataVal = 1 * minDataVal;
+        maxDataVal = 1 * maxDataVal;
+        
         context.translate(chartTopLeftX, chartTopLeftY);
         
         context.fillStyle = that.chartBackgroundFillStyle;
         context.fillRect(0,0,chartWidth,chartHeight);
-        
+
         // build the y axis labels
         var yAxisValues = new Array();
-        yAxisValues.push(0);
-        for (var i = 1; i < 10; i++) {
-            if (maxDataVal <= 100) {
-                yAxisValues.push((maxDataVal * i/10).toFixed(that.numberOfDecimals));
-            } else {
-                yAxisValues.push(((Math.round(maxDataVal / 100) * 100) * i/10).toFixed(that.numberOfDecimals));
-            }
-        }
-        if (maxDataVal <= 100) {
-            yAxisValues.push(maxDataVal);
-        } else {
-            yAxisValues.push((Math.round(maxDataVal / 100) * 100));
+        var diffOfMaxMin = maxDataVal - minDataVal;
+
+        for (var i = 0; i <= 10; i++) {
+            yAxisValues.push(roundDigit(diffOfMaxMin/10, minDataVal + diffOfMaxMin * i/10));
         }
         
         // Draw the markers, horizontal lines, and axis' labels:
@@ -1195,11 +1149,13 @@ function AwesomeChart(canvasElementId){
             context.lineTo(0,lineY);
             context.stroke();
             
-            context.beginPath();
-            context.moveTo(chartWidth,lineY);
-            context.lineTo(chartWidth+that.chartMarkerSize,lineY);
-            context.stroke();
-            
+            if (that.chartType == "pareto") {
+                context.beginPath();
+                context.moveTo(chartWidth,lineY);
+                context.lineTo(chartWidth+that.chartMarkerSize,lineY);
+                context.stroke();
+            }
+                
             context.fillStyle = that.yAxisLabelFillStyle;
             // label the left Y axis
             context.textAlign = 'right';
