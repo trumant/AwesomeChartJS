@@ -15,6 +15,7 @@ AwesomeChartJS is a small JavaScript chart rendering library using HTML 5 Canvas
 ## Usage
 
 See:
+
 * demo.html
 * demo-multicolor.html
 * stacked.html
