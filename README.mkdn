@@ -1,27 +1,31 @@
-#AwesomeChartJS
+# AwesomeChartJS
 
-AwesomeChartJS is a small JavaScript chart rendering library based on the HTML 5 canvas.
+AwesomeChartJS is a small JavaScript chart rendering library using HTML 5 Canvas.
 
-##Chart types
+## Chart types
 
 * Vertical and horizontal bar charts
 * Pareto bar charts
 * Pie charts (whole or part)
 * Exploded pie charts (whole or part)
 * Ring/Doughnut charts (whole or part)
+* Stacked column charts
 
-##Demo
+## Usage
 
-<a href="http://cyberpython.github.com/AwesomeChartJS/" target="_blank">Go to demos page</a>
+See:
+ * demo.html
+ * demo-multicolor.html
+ * stacked.html
 
-##Usage
-See demo.html
+## Authors
 
-##License
+Original creator: Georgios Migdos <cyberpython@gmail.com>
+Refactoring and addition of stacked column chart: Travis Truman <trumant@gmail.com>
 
-Copyright (c) 2011 Georgios Migdos <cyberpython@gmail.com>
+## License
 
-Source code is available under the terms of the [Apache license v2.0](http://www.apache.org/licenses/LICENSE-2.0).
+[Apache license v2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 
 
